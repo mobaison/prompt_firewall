@@ -1,472 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City General Hospital – AI Health Assistant</title>
-    <style>
-        /* ── CSS Reset & Variables ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City General Hospital – AI Health Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1a5276; --primary-light: #2e86c1; --accent: #27ae60;
+      --bg: #f0f4f8; --white: #ffffff;
+      --gray-100: #f8f9fa; --gray-200: #e9ecef; --gray-400: #ced4da;
+      --gray-600: #6c757d; --text: #2c3e50;
+      --bot-bubble: #e8f4fd; --user-bubble: #1a5276;
+      --blocked-bg: #fdf2f2; --blocked-border: #f5c6cb;
+      --redirect-bg: #fff8e1; --redirect-border: #ffe082;
+      --warn-bg: #fff3cd;
+      --shadow: 0 4px 20px rgba(0,0,0,0.12); --radius: 18px;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg);
+           color: var(--text); height: 100vh; display: flex; flex-direction: column; }
 
-        :root {
-            --primary: #1a5276;
-            --primary-light: #2e86c1;
-            --accent: #27ae60;
-            --accent-hover: #1e8449;
-            --bg: #f0f4f8;
-            --white: #ffffff;
-            --gray-100: #f8f9fa;
-            --gray-200: #e9ecef;
-            --gray-400: #ced4da;
-            --gray-600: #6c757d;
-            --text: #2c3e50;
-            --bot-bubble: #e8f4fd;
-            --user-bubble: #1a5276;
-            --shadow: 0 4px 20px rgba(0,0,0,0.12);
-            --radius: 18px;
-        }
+    /* ── Header ── */
+    .header { background: linear-gradient(135deg, var(--primary), var(--primary-light));
+              color: white; padding: 14px 20px; display: flex; align-items: center;
+              justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .hospital-logo { width: 44px; height: 44px; background: white; border-radius: 50%;
+                     display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .header-title h1 { font-size: 1.1rem; font-weight: 700; }
+    .header-title p  { font-size: 0.78rem; opacity: 0.88; }
+    .header-right    { display: flex; align-items: center; gap: 14px; }
+    .status-dot { width: 10px; height: 10px; background: #2ecc71; border-radius: 50%;
+                  animation: pulse 2s infinite; display: inline-block; margin-right: 6px; }
+    .status-text { font-size: 0.78rem; opacity: 0.9; }
+    .firewall-badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4);
+                      border-radius: 20px; padding: 4px 12px; font-size: 0.72rem;
+                      display: flex; align-items: center; gap: 5px; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(46,204,113,0.4)}
+                       50%{box-shadow:0 0 0 6px rgba(46,204,113,0)} }
 
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+    /* ── Chips ── */
+    .chips-bar { background: white; padding: 10px 16px; display: flex; gap: 8px;
+                 overflow-x: auto; border-bottom: 1px solid var(--gray-200); scrollbar-width: none; }
+    .chips-bar::-webkit-scrollbar { display: none; }
+    .chip { background: var(--gray-100); border: 1px solid var(--gray-400); border-radius: 20px;
+            padding: 6px 14px; font-size: 0.78rem; cursor: pointer; white-space: nowrap;
+            transition: all 0.2s; color: var(--primary); font-weight: 500; }
+    .chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* ── Header ── */
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .header-left { display: flex; align-items: center; gap: 14px; }
-        .hospital-logo {
-            width: 44px; height: 44px;
-            background: white;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-        }
-        .header-title h1 { font-size: 1.1rem; font-weight: 700; }
-        .header-title p { font-size: 0.78rem; opacity: 0.88; }
-        .status-dot {
-            width: 10px; height: 10px;
-            background: #2ecc71;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-            display: inline-block;
-            margin-right: 6px;
-        }
-        .status-text { font-size: 0.78rem; opacity: 0.9; }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(46,204,113,0); }
-        }
+    /* ── Chat area ── */
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px 16px;
+                      display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
 
-        /* ── Quick Chips ── */
-        .chips-bar {
-            background: white;
-            padding: 10px 16px;
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            border-bottom: 1px solid var(--gray-200);
-            scrollbar-width: none;
-        }
-        .chips-bar::-webkit-scrollbar { display: none; }
-        .chip {
-            background: var(--gray-100);
-            border: 1px solid var(--gray-400);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 0.78rem;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-            color: var(--primary);
-            font-weight: 500;
-        }
-        .chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    /* ── Messages ── */
+    .message { display: flex; gap: 10px; max-width: 88%; animation: fadeInUp 0.3s ease; }
+    @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.bot  { align-self: flex-start; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex;
+              align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .bot  .avatar { background: var(--primary); }
+    .user .avatar { background: var(--accent); }
 
-        /* ── Chat Area ── */
-        .chat-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            scroll-behavior: smooth;
-        }
+    .bubble { padding: 12px 16px; border-radius: var(--radius); line-height: 1.6;
+              font-size: 0.9rem; max-width: 100%; }
+    .bot  .bubble { background: var(--bot-bubble); border-top-left-radius: 4px;
+                    box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .user .bubble { background: var(--user-bubble); border-top-right-radius: 4px; color: white; }
 
-        /* ── Messages ── */
-        .message { display: flex; gap: 10px; max-width: 88%; animation: fadeInUp 0.3s ease; }
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .message.user { align-self: flex-end; flex-direction: row-reverse; }
-        .message.bot  { align-self: flex-start; }
+    /* ── Firewall blocked bubble ── */
+    .bubble.blocked {
+      background: var(--blocked-bg);
+      border: 1px solid var(--blocked-border);
+      border-top-left-radius: 4px;
+    }
+    /* ── Crisis / redirect bubble ── */
+    .bubble.redirect {
+      background: var(--redirect-bg);
+      border: 1px solid var(--redirect-border);
+      border-top-left-radius: 4px;
+    }
+    .firewall-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.03em;
+      background: #e74c3c; color: white;
+      border-radius: 10px; padding: 2px 8px; margin-bottom: 6px;
+    }
+    .redirect-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.68rem; font-weight: 600;
+      background: #f39c12; color: white;
+      border-radius: 10px; padding: 2px 8px; margin-bottom: 6px;
+    }
 
-        .avatar {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        .bot .avatar  { background: var(--primary); }
-        .user .avatar { background: var(--accent); }
+    /* ── Sources ── */
+    .sources { margin-top: 8px; font-size: 0.73rem; color: var(--gray-600);
+               border-top: 1px dashed var(--gray-400); padding-top: 6px; }
+    .source-tag { display: inline-block; background: var(--gray-200); border-radius: 10px;
+                  padding: 2px 8px; margin: 2px 2px 0 0; font-size: 0.7rem; }
 
-        .bubble {
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            line-height: 1.6;
-            font-size: 0.9rem;
-            max-width: 100%;
-        }
-        .bot .bubble {
-            background: var(--bot-bubble);
-            border-top-left-radius: 4px;
-            color: var(--text);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        }
-        .user .bubble {
-            background: var(--user-bubble);
-            border-top-right-radius: 4px;
-            color: white;
-        }
+    /* ── Rate warning banner ── */
+    .warn-banner { background: var(--warn-bg); border: 1px solid #ffc107;
+                   border-radius: 8px; padding: 6px 12px; font-size: 0.78rem;
+                   color: #856404; margin-top: 6px; }
 
-        /* Formatted bot responses */
-        .bubble ul { margin: 8px 0 4px 18px; }
-        .bubble li { margin-bottom: 4px; }
-        .bubble strong { font-weight: 600; }
+    /* ── Typing ── */
+    .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+    .typing-dot { width: 8px; height: 8px; background: var(--gray-600); border-radius: 50%;
+                  animation: bounce 1.2s infinite; }
+    .typing-dot:nth-child(2){animation-delay:0.2s}
+    .typing-dot:nth-child(3){animation-delay:0.4s}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
 
-        /* Sources */
-        .sources {
-            margin-top: 8px;
-            font-size: 0.73rem;
-            color: var(--gray-600);
-            border-top: 1px dashed var(--gray-400);
-            padding-top: 6px;
-        }
-        .source-tag {
-            display: inline-block;
-            background: var(--gray-200);
-            border-radius: 10px;
-            padding: 2px 8px;
-            margin: 2px 2px 0 0;
-            font-size: 0.7rem;
-        }
+    /* ── Welcome ── */
+    .welcome-card { background: white; border-radius: 16px; padding: 20px; text-align: center;
+                    box-shadow: var(--shadow); align-self: center; max-width: 420px;
+                    width: 100%; margin-top: 10px; }
+    .welcome-card .icon { font-size: 3rem; margin-bottom: 10px; }
+    .welcome-card h2 { color: var(--primary); font-size: 1.1rem; margin-bottom: 8px; }
+    .welcome-card p  { color: var(--gray-600); font-size: 0.85rem; line-height: 1.6; }
 
-        /* Typing indicator */
-        .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
-        .typing-dot {
-            width: 8px; height: 8px;
-            background: var(--gray-600);
-            border-radius: 50%;
-            animation: bounce 1.2s infinite;
-        }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-8px); }
-        }
+    /* ── Bubble content formatting ── */
+    .bubble ul { margin: 8px 0 4px 18px; }
+    .bubble li { margin-bottom: 4px; }
+    .bubble strong { font-weight: 600; }
+    .bubble p { margin-bottom: 6px; }
 
-        /* ── Welcome card ── */
-        .welcome-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: var(--shadow);
-            align-self: center;
-            max-width: 420px;
-            width: 100%;
-            margin-top: 10px;
-        }
-        .welcome-card .icon { font-size: 3rem; margin-bottom: 10px; }
-        .welcome-card h2 { color: var(--primary); font-size: 1.1rem; margin-bottom: 8px; }
-        .welcome-card p { color: var(--gray-600); font-size: 0.85rem; line-height: 1.6; }
+    /* ── Input area ── */
+    .input-area { background: white; border-top: 1px solid var(--gray-200);
+                  padding: 12px 16px; display: flex; gap: 10px; align-items: flex-end;
+                  box-shadow: 0 -2px 10px rgba(0,0,0,0.06); }
+    textarea { flex: 1; border: 1.5px solid var(--gray-400); border-radius: 24px;
+               padding: 10px 18px; font-size: 0.9rem; font-family: inherit;
+               resize: none; min-height: 44px; max-height: 120px; line-height: 1.5;
+               outline: none; transition: border-color 0.2s; }
+    textarea:focus { border-color: var(--primary-light); }
+    .send-btn { width: 44px; height: 44px; border-radius: 50%; border: none;
+                background: var(--primary); color: white; font-size: 18px;
+                cursor: pointer; display: flex; align-items: center; justify-content: center;
+                transition: all 0.2s; flex-shrink: 0; }
+    .send-btn:hover    { background: var(--primary-light); transform: scale(1.06); }
+    .send-btn:disabled { background: var(--gray-400); cursor: not-allowed; transform: none; }
+    .clear-btn { background: none; border: 1.5px solid var(--gray-400); border-radius: 20px;
+                 padding: 8px 14px; font-size: 0.78rem; color: var(--gray-600);
+                 cursor: pointer; transition: all 0.2s; }
+    .clear-btn:hover { border-color: #e74c3c; color: #e74c3c; }
 
-        /* ── Input Area ── */
-        .input-area {
-            background: white;
-            border-top: 1px solid var(--gray-200);
-            padding: 12px 16px;
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
-        }
-        textarea {
-            flex: 1;
-            border: 1.5px solid var(--gray-400);
-            border-radius: 24px;
-            padding: 10px 18px;
-            font-size: 0.9rem;
-            font-family: inherit;
-            resize: none;
-            min-height: 44px;
-            max-height: 120px;
-            line-height: 1.5;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        textarea:focus { border-color: var(--primary-light); }
-        textarea::placeholder { color: var(--gray-600); }
-
-        .send-btn {
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            border: none;
-            background: var(--primary);
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .send-btn:hover { background: var(--primary-light); transform: scale(1.06); }
-        .send-btn:disabled { background: var(--gray-400); cursor: not-allowed; transform: none; }
-
-        .clear-btn {
-            background: none;
-            border: 1.5px solid var(--gray-400);
-            border-radius: 20px;
-            padding: 8px 14px;
-            font-size: 0.78rem;
-            color: var(--gray-600);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .clear-btn:hover { border-color: #e74c3c; color: #e74c3c; }
-
-        /* ── Emergency banner ── */
-        .emergency-strip {
-            background: #c0392b;
-            color: white;
-            text-align: center;
-            font-size: 0.75rem;
-            padding: 5px;
-            font-weight: 500;
-        }
-        .emergency-strip a { color: #ffe0e0; }
-    </style>
+    /* ── Emergency strip ── */
+    .emergency-strip { background: #c0392b; color: white; text-align: center;
+                       font-size: 0.75rem; padding: 5px; font-weight: 500; }
+  </style>
 </head>
 <body>
 
-    <!-- Emergency strip -->
-    <div class="emergency-strip">
-        🚨 Medical Emergency? Call <strong>108</strong> or <strong>+1-800-HOSPITAL</strong> immediately
-    </div>
+<div class="emergency-strip">
+  🚨 Medical Emergency? Call <strong>108</strong> or <strong>+1-800-HOSPITAL</strong> immediately
+</div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <div class="hospital-logo">🏥</div>
-            <div class="header-title">
-                <h1>City General Hospital</h1>
-                <p>AI Health Assistant</p>
-            </div>
-        </div>
-        <div>
-            <span class="status-dot"></span>
-            <span class="status-text">Online & Ready</span>
-        </div>
-    </header>
-
-    <!-- Quick Question Chips -->
-    <div class="chips-bar" id="chipsBar">
-        <button class="chip" onclick="sendChip('What are the OPD timings?')">🕐 OPD Timings</button>
-        <button class="chip" onclick="sendChip('What are the consultation fees?')">💰 Fees</button>
-        <button class="chip" onclick="sendChip('How do I book an appointment?')">📅 Appointments</button>
-        <button class="chip" onclick="sendChip('What is diabetes and how is it treated?')">💊 Diabetes Info</button>
-        <button class="chip" onclick="sendChip('What departments does the hospital have?')">🏥 Departments</button>
-        <button class="chip" onclick="sendChip('Do you accept health insurance?')">🛡️ Insurance</button>
-        <button class="chip" onclick="sendChip('What are the emergency contact numbers?')">🚨 Emergency</button>
-        <button class="chip" onclick="sendChip('What diagnostic tests are available?')">🔬 Diagnostics</button>
+<header class="header">
+  <div class="header-left">
+    <div class="hospital-logo">🏥</div>
+    <div class="header-title">
+      <h1>City General Hospital</h1>
+      <p>AI Health Assistant</p>
     </div>
-
-    <!-- Chat Area -->
-    <div class="chat-container" id="chatContainer">
-        <!-- Welcome Card -->
-        <div class="welcome-card" id="welcomeCard">
-            <div class="icon">🩺</div>
-            <h2>Hello! I'm your Health Assistant</h2>
-            <p>I can help you with hospital timings, doctor fees, appointment booking, medical information, diagnostics, and more. How can I assist you today?</p>
-        </div>
+  </div>
+  <div class="header-right">
+    <div class="firewall-badge">🛡️ Firewall Active</div>
+    <div>
+      <span class="status-dot"></span>
+      <span class="status-text">Online</span>
     </div>
+  </div>
+</header>
 
-    <!-- Input Area -->
-    <div class="input-area">
-        <button class="clear-btn" onclick="clearChat()" title="Clear conversation">🗑️ Clear</button>
-        <textarea
-            id="userInput"
-            placeholder="Ask about timings, fees, symptoms, doctors..."
-            rows="1"
-            onkeydown="handleKeyDown(event)"
-            oninput="autoResize(this)"
-        ></textarea>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">➤</button>
-    </div>
+<div class="chips-bar">
+  <button class="chip" onclick="sendChip('What are the OPD timings?')">🕐 OPD Timings</button>
+  <button class="chip" onclick="sendChip('What are the consultation fees?')">💰 Fees</button>
+  <button class="chip" onclick="sendChip('How do I book an appointment?')">📅 Appointments</button>
+  <button class="chip" onclick="sendChip('What is diabetes and how is it treated?')">💊 Diabetes</button>
+  <button class="chip" onclick="sendChip('What departments does the hospital have?')">🏥 Departments</button>
+  <button class="chip" onclick="sendChip('Do you accept health insurance?')">🛡️ Insurance</button>
+  <button class="chip" onclick="sendChip('What are the emergency contact numbers?')">🚨 Emergency</button>
+  <button class="chip" onclick="sendChip('What diagnostic tests are available?')">🔬 Diagnostics</button>
+</div>
+
+<div class="chat-container" id="chatContainer">
+  <div class="welcome-card" id="welcomeCard">
+    <div class="icon">🩺</div>
+    <h2>Hello! I'm MedAssist</h2>
+    <p>Your AI health assistant for City General Hospital. Ask me about doctors,
+       timings, fees, appointments, health packages, or medical conditions.</p>
+    <p style="margin-top:10px;font-size:0.75rem;color:#aaa;">🛡️ Protected by 5-layer prompt firewall</p>
+  </div>
+</div>
+
+<div class="input-area">
+  <button class="clear-btn" onclick="clearChat()">🗑️ Clear</button>
+  <textarea id="userInput" placeholder="Ask about timings, fees, symptoms, doctors..."
+            rows="1" onkeydown="handleKeyDown(event)" oninput="autoResize(this)"></textarea>
+  <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+</div>
 
 <script>
-    const chatContainer = document.getElementById('chatContainer');
-    const userInput     = document.getElementById('userInput');
-    const sendBtn       = document.getElementById('sendBtn');
-    const welcomeCard   = document.getElementById('welcomeCard');
+  const chatContainer = document.getElementById('chatContainer');
+  const userInput     = document.getElementById('userInput');
+  const sendBtn       = document.getElementById('sendBtn');
+  const welcomeCard   = document.getElementById('welcomeCard');
+  let isFirstMessage  = true;
 
-    let isFirstMessage = true;
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
 
-    // ── Auto-resize textarea ──
-    function autoResize(el) {
-        el.style.height = 'auto';
-        el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function sendChip(text) { userInput.value = text; sendMessage(); }
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    if (isFirstMessage) { welcomeCard.style.display = 'none'; isFirstMessage = false; }
+
+    appendMessage('user', text);
+    userInput.value = ''; userInput.style.height = 'auto';
+    const typingId = showTyping();
+    sendBtn.disabled = true;
+
+    try {
+      const res  = await fetch('/api/chat', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ message: text }),
+      });
+      const data = await res.json();
+      removeTyping(typingId);
+
+      if (data.blocked) {
+        // Firewall blocked — show differently based on action
+        const isRedirect = data.action === 'redirect';
+        appendBlockedMessage(data.response, data.block_layer, isRedirect);
+      } else {
+        appendMessage('bot', data.response, data.sources || []);
+        // Show rate limit warning if present
+        if (data.warning) showWarningBanner(data.warning);
+      }
+    } catch (err) {
+      removeTyping(typingId);
+      appendMessage('bot', '⚠️ Connection error. Please call +1-800-HOSPITAL.', []);
+    } finally {
+      sendBtn.disabled = false;
+      userInput.focus();
+    }
+  }
+
+  function appendMessage(role, text, sources = []) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'bot' ? '🏥' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = formatText(text);
+
+    if (sources.length > 0) {
+      const src = document.createElement('div');
+      src.className = 'sources';
+      src.innerHTML = '📎 Sources: ' + sources.map(s => `<span class="source-tag">${s}</span>`).join('');
+      bubble.appendChild(src);
     }
 
-    // ── Enter to send, Shift+Enter for newline ──
-    function handleKeyDown(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    }
+    msgDiv.appendChild(avatar); msgDiv.appendChild(bubble);
+    chatContainer.appendChild(msgDiv);
+    scrollToBottom();
+  }
 
-    // ── Send chip question ──
-    function sendChip(text) {
-        userInput.value = text;
-        sendMessage();
-    }
+  function appendBlockedMessage(text, layer, isRedirect) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'message bot';
 
-    // ── Main send function ──
-    async function sendMessage() {
-        const text = userInput.value.trim();
-        if (!text) return;
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = isRedirect ? '💛' : '🛡️';
+    avatar.style.background = isRedirect ? '#f39c12' : '#e74c3c';
 
-        // Hide welcome card on first message
-        if (isFirstMessage) {
-            welcomeCard.style.display = 'none';
-            isFirstMessage = false;
-        }
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${isRedirect ? 'redirect' : 'blocked'}`;
 
-        // Render user bubble
-        appendMessage('user', text);
-        userInput.value = '';
-        userInput.style.height = 'auto';
+    const tag = document.createElement('div');
+    tag.className = isRedirect ? 'redirect-tag' : 'firewall-tag';
+    tag.textContent = isRedirect ? '⚠️ SUPPORT RESOURCE' : `🛡️ FIREWALL: ${layer}`;
+    bubble.appendChild(tag);
 
-        // Show typing indicator
-        const typingId = showTyping();
-        sendBtn.disabled = true;
+    const content = document.createElement('div');
+    content.innerHTML = formatText(text);
+    bubble.appendChild(content);
 
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
-            });
-            const data = await res.json();
+    msgDiv.appendChild(avatar); msgDiv.appendChild(bubble);
+    chatContainer.appendChild(msgDiv);
+    scrollToBottom();
+  }
 
-            removeTyping(typingId);
-            appendMessage('bot', data.response, data.sources || []);
-        } catch (err) {
-            removeTyping(typingId);
-            appendMessage('bot', '⚠️ Connection error. Please try again or call +1-800-HOSPITAL.', []);
-        } finally {
-            sendBtn.disabled = false;
-            userInput.focus();
-        }
-    }
+  function showWarningBanner(text) {
+    const last = chatContainer.lastElementChild;
+    if (!last) return;
+    const warn = document.createElement('div');
+    warn.className = 'warn-banner';
+    warn.textContent = text;
+    last.appendChild(warn);
+  }
 
-    // ── Append a message bubble ──
-    function appendMessage(role, text, sources = []) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${role}`;
+  function formatText(text) {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/gs, m => `<ul>${m}</ul>`)
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^(.+)$/, '<p>$1</p>');
+  }
 
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.textContent = role === 'bot' ? '🏥' : '👤';
+  function showTyping() {
+    const id  = 'typing-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'message bot'; div.id = id;
+    div.innerHTML = `<div class="avatar" style="background:var(--primary)">🏥</div>
+      <div class="bubble"><div class="typing">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div></div>`;
+    chatContainer.appendChild(div); scrollToBottom(); return id;
+  }
 
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble';
-        bubble.innerHTML = formatText(text);
+  function removeTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-        // Add sources if present
-        if (sources.length > 0) {
-            const sourcesDiv = document.createElement('div');
-            sourcesDiv.className = 'sources';
-            sourcesDiv.innerHTML = '📎 Sources: ' + sources.map(s =>
-                `<span class="source-tag">${s}</span>`
-            ).join('');
-            bubble.appendChild(sourcesDiv);
-        }
+  async function clearChat() {
+    if (!confirm('Clear conversation history?')) return;
+    await fetch('/api/clear', { method: 'POST' });
+    chatContainer.innerHTML = '';
+    chatContainer.appendChild(welcomeCard);
+    welcomeCard.style.display = 'block';
+    isFirstMessage = true;
+  }
 
-        msgDiv.appendChild(avatar);
-        msgDiv.appendChild(bubble);
-        chatContainer.appendChild(msgDiv);
-        scrollToBottom();
-    }
-
-    // ── Format bot response text (markdown-lite) ──
-    function formatText(text) {
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/^- (.+)$/gm, '<li>$1</li>')
-            .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-            .replace(/\n{2,}/g, '</p><p>')
-            .replace(/\n/g, '<br>')
-            .replace(/^(.+)$/, '<p>$1</p>');
-    }
-
-    // ── Typing indicator ──
-    function showTyping() {
-        const id = 'typing-' + Date.now();
-        const div = document.createElement('div');
-        div.className = 'message bot';
-        div.id = id;
-        div.innerHTML = `
-            <div class="avatar">🏥</div>
-            <div class="bubble" style="padding: 10px 16px;">
-                <div class="typing">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>`;
-        chatContainer.appendChild(div);
-        scrollToBottom();
-        return id;
-    }
-
-    function removeTyping(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
-    // ── Clear conversation ──
-    async function clearChat() {
-        if (!confirm('Clear conversation history?')) return;
-        await fetch('/api/clear', { method: 'POST' });
-        chatContainer.innerHTML = '';
-        chatContainer.appendChild(welcomeCard);
-        welcomeCard.style.display = 'block';
-        isFirstMessage = true;
-    }
-
-    function scrollToBottom() {
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    // Auto-focus input on load
-    userInput.focus();
+  function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+  userInput.focus();
 </script>
 </body>
 </html>
