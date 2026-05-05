@@ -114,7 +114,7 @@ def health():
 def firewall_stats():
     """Return rate-limit stats for current session (debug endpoint)."""
     session_id = session.get("session_id", "default")
-    return jsonify(firewall.stats(session_id))
+    return jsonify(firewall.stats(session_id))  
 
 
 @app.route("/api/clear", methods=["POST"])
